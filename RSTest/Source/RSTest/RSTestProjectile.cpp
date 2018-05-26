@@ -3,6 +3,7 @@
 #include "RSTestProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Enemies/BaseEnemy.h"
 
 ARSTestProjectile::ARSTestProjectile() 
 {
@@ -29,6 +30,8 @@ ARSTestProjectile::ARSTestProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
+
+	_damage = 5.0f;
 }
 
 void ARSTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -36,8 +39,13 @@ void ARSTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+		if (OtherActor->IsA(ABaseEnemy::StaticClass()))
+		{
+			ABaseEnemy* enemy = Cast<ABaseEnemy>(OtherActor);
 
-		Destroy();
+			enemy->OnShot(this, _damage);
+			Destroy();
+		}
+		//OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation()); // Commented out template line
 	}
 }
