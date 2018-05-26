@@ -49,6 +49,10 @@ void ABaseEnemy::TakeDamage(float damageAmount)
 			_canTakeDamage = false;
 			GetWorldTimerManager().SetTimer(_invulnerableWindowHandle, this, &ABaseEnemy::EndInvulnerability, _invulnerabilityWindowSeconds);
 		}
+		else
+		{
+			Destroy();
+		}
 	}
 }
 
