@@ -5,17 +5,19 @@
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "CollisionQueryParams.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+#include "Powers/EarthSpike.h"
+#include "Runtime/Engine/Public/DrawDebugHelpers.h"
+#include "Engine.h"
 
 AEEarthChanneler::AEEarthChanneler()
 {
-	//Earth Spike
-	static ConstructorHelpers::FObjectFinder<UClass> earthSpike(TEXT("Class'/Game/Blueprints/Environment/EarthSpike.EarthSpike_C'"));
+	//EarthSpike.cpp
+	static ConstructorHelpers::FObjectFinder<UClass> earthSpike(TEXT("Class'/Game/Blueprints/Attacks/EarthSpike.EarthSpike_C'"));
 	if (earthSpike.Object)
 	{
 		_earthSpike = earthSpike.Object;
 	}
 
-	_attackActivationDelay = 0.5f;
 	_attackRaycastLength = 5000.0f;
 }
 
@@ -33,6 +35,7 @@ void AEEarthChanneler::Attack(FVector attackLocation)
 
 		for (int i = 1; i <= 4; i++)
 		{
+			FVector traceHitLocation;
 			FVector traceDirection;
 			if (i < 3)
 			{
@@ -56,9 +59,15 @@ void AEEarthChanneler::Attack(FVector attackLocation)
 				traceParams
 			);
 
-			if (hitData.GetActor() && !hitData.GetActor()->IsA(ACharacter::StaticClass()))
+			//GEngine->AddOnScreenDebugMessage(-1, 800.f, FColor::Red, FString::SanitizeFloat((hitData.Location - attackLocation).Size())); // Debug for testing
+
+			if (hitData.GetActor() && 
+				!hitData.GetActor()->IsA(ACharacter::StaticClass()) && 
+				(closestSpawnPosition == nullptr || 
+				(*closestSpawnPosition - attackLocation).Size() > (hitData.Location - attackLocation).Size()))
 			{
-				closestSpawnPosition = &hitData.Location;
+				traceHitLocation = FVector(hitData.Location);
+				closestSpawnPosition = &traceHitLocation;
 			}
 		}
 
@@ -69,17 +78,20 @@ void AEEarthChanneler::Attack(FVector attackLocation)
 	}
 }
 
+//This function would ideally be extracted so that the EarthChanneler knew they had a Magic Power but could call whatever power they have without mentioning specifics
 void AEEarthChanneler::CreateEarthSpike(FVector& spawnLocation, FVector& attackLocation)
 {
 	UWorld* const world = GetWorld();
 	if (world && _earthSpike)
 	{
 		FActorSpawnParameters spawnParams;
-		AActor* newEarthSpike = world->SpawnActor<AActor>(
+		AEarthSpike* newEarthSpike = world->SpawnActor<AEarthSpike>(
 			_earthSpike,
 			spawnLocation,
-			UKismetMathLibrary::FindLookAtRotation(spawnLocation, attackLocation) + FRotator(-90.f, 0, 0), //TODO rotate 90 degrees so top is facing player
+			UKismetMathLibrary::FindLookAtRotation(spawnLocation, attackLocation) + FRotator(-90.f, 0, 0),
 			spawnParams
 			);
+		newEarthSpike->SetAttackLocation(attackLocation);
+		newEarthSpike->ActivatePower();
 	}
 }

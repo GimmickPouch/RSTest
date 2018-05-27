@@ -23,9 +23,6 @@ protected:
 	UClass* _earthSpike;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Channeler Attack")
-		float _attackActivationDelay;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Earth Channeler Attack")
 		float _attackRaycastLength;
 
 	//Functions
