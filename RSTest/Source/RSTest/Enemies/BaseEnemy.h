@@ -11,7 +11,6 @@ class RSTEST_API ABaseEnemy : public ACharacter
 {
 	GENERATED_BODY()
 	
-	//Functions
 public:	
 	ABaseEnemy();
 
@@ -53,7 +52,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy Reactions")
-		virtual void TakeDamage(float damageAmount);
+		virtual void OnTakeDamage(float damageAmount);
 
 	virtual void EndInvulnerability();
 

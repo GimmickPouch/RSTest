@@ -14,8 +14,23 @@ class RSTEST_API AEEarthChanneler : public ABaseEnemy
 {
 	GENERATED_BODY()
 	
+public:
+	AEEarthChanneler();
+
+	//Variables
+protected:
+
+	UClass* _earthSpike;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Earth Channeler Attack")
+		float _attackActivationDelay;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Earth Channeler Attack")
+		float _attackRaycastLength;
+
+	//Functions
 protected:
 	virtual void Attack(FVector attackLocation) override;
-	
-	
+
+	void CreateEarthSpike(FVector& spawnLocation, FVector& attackLocation);
 };

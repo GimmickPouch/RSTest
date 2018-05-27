@@ -36,10 +36,10 @@ void ABaseEnemy::Tick(float DeltaTime)
 void ABaseEnemy::OnShot(AActor* shotBy, float attemptedDamage)
 {
 	// CAREFUL: shotBy is destroyed after this call
-	TakeDamage(attemptedDamage);
+	OnTakeDamage(attemptedDamage);
 }
 
-void ABaseEnemy::TakeDamage(float damageAmount)
+void ABaseEnemy::OnTakeDamage(float damageAmount)
 {
 	if (!_isDead && _canTakeDamage)
 	{
