@@ -14,7 +14,8 @@ class RSTEST_API AEEarthChanneler : public ABaseEnemy
 {
 	GENERATED_BODY()
 	
-	
+protected:
+	virtual void Attack(FVector attackLocation) override;
 	
 	
 };

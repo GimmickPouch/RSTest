@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
 #include "BaseEnemy.generated.h"
 
 UCLASS()
-class RSTEST_API ABaseEnemy : public AActor
+class RSTEST_API ABaseEnemy : public ACharacter
 {
 	GENERATED_BODY()
 	
@@ -52,11 +52,15 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void TakeDamage(float damageAmount);
+	UFUNCTION(BlueprintCallable, Category = "Enemy Reactions")
+		virtual void TakeDamage(float damageAmount);
 
 	virtual void EndInvulnerability();
 
 	virtual bool CheckForDeath();
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy Actions")
+		virtual void Attack(FVector attackLocation) {};
 
 public:
 	virtual void OnShot(AActor* shotBy, float attemptedDamage);
