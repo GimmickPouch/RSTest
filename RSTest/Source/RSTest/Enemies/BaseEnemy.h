@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy GetSet")
 		void DecreaseHealth(float decreaseAmount) { _health -= decreaseAmount;  if (_health < 0) { _health = 0; } };
 
+	UFUNCTION(BlueprintCallable, Category = "Enemy GetSet")
+		float GetMaxHealth() const { return _maxHealth; }
+
 	//Functions
 protected:
 
