@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "TimerManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -85,6 +86,7 @@ ARSTestCharacter::ARSTestCharacter()
 
 	// Luke added from here:
 	_maxHealth = 5.f;
+	_invulnerabilityWindowSeconds = 0.5f;
 }
 
 void ARSTestCharacter::BeginPlay()
@@ -109,6 +111,7 @@ void ARSTestCharacter::BeginPlay()
 
 	// Luke added from here:
 	_health = _maxHealth;
+	_canTakeDamage = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -307,5 +310,15 @@ bool ARSTestCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerIn
 
 void ARSTestCharacter::OnTakeDamage(float damageAmount)
 {
-	_health -= damageAmount;
+	if (_canTakeDamage)
+	{
+		_health -= damageAmount;
+		_canTakeDamage = false;
+		GetWorldTimerManager().SetTimer(_invulnerableWindowHandle, this, &ARSTestCharacter::EndInvulnerability, _invulnerabilityWindowSeconds);
+	}
+}
+
+void ARSTestCharacter::EndInvulnerability()
+{
+	_canTakeDamage = true;
 }

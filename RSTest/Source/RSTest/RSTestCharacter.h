@@ -145,8 +145,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player Data", meta = (ClampMin = 0))
 		float _maxHealth;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Player Data")
+		float _invulnerabilityWindowSeconds;
+
 private:
+	FTimerHandle _invulnerableWindowHandle;
+
 	float _health;
+	bool _canTakeDamage;
 
 	//GettersAndSetters
 public:
@@ -157,7 +163,11 @@ public:
 		float GetMaxHealth() const { return _maxHealth; }
 
 	//Functions
+public:
 	UFUNCTION(BlueprintCallable, Category = "Player Reactions")
 		virtual void OnTakeDamage(float damageAmount); //TakeDamage function name was taken by Pawn class
+
+protected:
+	void EndInvulnerability();
 };
 
