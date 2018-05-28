@@ -35,12 +35,12 @@ protected:
 
 	virtual void PowerTick(float DeltaTime) {};
 
-	virtual void ActivatePowerAfterDelay();
-
 	void PowerBecomeActive();
 
 public:
 	virtual void ActivatePower();
+
+	virtual void ActivatePowerAfterDelay();
 
 	virtual void DeactivatePower();
 };

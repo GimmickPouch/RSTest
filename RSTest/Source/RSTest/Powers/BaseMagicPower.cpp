@@ -30,19 +30,19 @@ void ABaseMagicPower::Tick(float DeltaTime)
 
 void ABaseMagicPower::ActivatePower()
 {
-	if (_attackActivationDelay > 0.f)
-	{
-		GetWorldTimerManager().SetTimer(_powerActivationDelayHandle, this, &ABaseMagicPower::ActivatePowerAfterDelay, _attackActivationDelay);
-	}
-	else
-	{
-		PowerBecomeActive();
-	}
+	PowerBecomeActive();
 }
 
 void ABaseMagicPower::ActivatePowerAfterDelay()
 {
-	PowerBecomeActive();
+	if (_attackActivationDelay > 0.f)
+	{
+		GetWorldTimerManager().SetTimer(_powerActivationDelayHandle, this, &ABaseMagicPower::ActivatePower, _attackActivationDelay);
+	}
+	else
+	{
+		ActivatePower();
+	}
 }
 
 void ABaseMagicPower::PowerBecomeActive()

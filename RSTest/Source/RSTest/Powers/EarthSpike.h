@@ -59,4 +59,7 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
 		class UBoxComponent* _attackTrigger;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
+		class UStaticMeshComponent* _visualWarning;
 };

@@ -18,6 +18,12 @@ AEarthSpike::AEarthSpike()
 	_attackTrigger->SetCanEverAffectNavigation(false);
 	_attackTrigger->bGenerateOverlapEvents = true;
 
+	//This would be better as VFX
+	_visualWarning = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualWarning"));
+	_visualWarning->SetupAttachment(_powerMesh);
+	_visualWarning->SetCollisionProfileName("NoCollision");
+	_visualWarning->bGenerateOverlapEvents = false;
+
 	_attackActivationDelay = 0.5f;
 
 	_interpAttackSpeed = 25.f;
@@ -37,6 +43,12 @@ void AEarthSpike::ActivatePower()
 	//_attackLocation needs to be set before activating the Earth Spike
 	_scaleToReachTargetRoundedUp = FMath::CeilToInt(((_attackLocation - GetActorLocation()).Size()) / kPowerSize);
 	_scaleToReachTargetRoundedUp += 1; //Just to make sure the block is going to try and go right through the player - adds more near-miss tension
+
+	if (_visualWarning != nullptr)
+	{
+		_visualWarning->DestroyComponent();
+		_visualWarning = nullptr;
+	}
 
 	Super::ActivatePower();
 }

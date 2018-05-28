@@ -92,6 +92,6 @@ void AEEarthChanneler::CreateEarthSpike(FVector& spawnLocation, FVector& attackL
 			spawnParams
 			);
 		newEarthSpike->SetAttackLocation(attackLocation);
-		newEarthSpike->ActivatePower();
+		newEarthSpike->ActivatePowerAfterDelay();
 	}
 }
