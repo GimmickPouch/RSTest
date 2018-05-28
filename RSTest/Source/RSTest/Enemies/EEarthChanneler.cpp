@@ -78,7 +78,7 @@ void AEEarthChanneler::Attack(FVector attackLocation)
 	}
 }
 
-//This function would ideally be extracted so that the EarthChanneler knew they had a Magic Power but could call whatever power they have without mentioning specifics
+//This function would ideally be extracted so that the Earth Spike power was easier to have equipped as a power by multiple classes
 void AEEarthChanneler::CreateEarthSpike(FVector& spawnLocation, FVector& attackLocation)
 {
 	UWorld* const world = GetWorld();

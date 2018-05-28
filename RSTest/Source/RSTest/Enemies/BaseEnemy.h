@@ -52,7 +52,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy Reactions")
-		virtual void OnTakeDamage(float damageAmount);
+		virtual void OnTakeDamage(float damageAmount); //TakeDamage function name was taken by Pawn class
 
 	virtual void EndInvulnerability();
 
@@ -63,10 +63,5 @@ protected:
 
 public:
 	virtual void OnShot(AActor* shotBy, float attemptedDamage);
-
-	//Visuals and Colliders
-protected:
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		UStaticMeshComponent* _enemyMesh;
 	
 };

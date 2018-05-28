@@ -1,16 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BaseEnemy.h"
-#include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
 
 ABaseEnemy::ABaseEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	_enemyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyMesh"));
-	_enemyMesh->SetupAttachment(RootComponent);
+	//RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	//_enemyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyMesh"));
+	//_enemyMesh->SetupAttachment(RootComponent);
 
 	_maxHealth = 100;
 	_invulnerabilityWindowSeconds = 0.5f;
@@ -35,7 +34,7 @@ void ABaseEnemy::Tick(float DeltaTime)
 
 void ABaseEnemy::OnShot(AActor* shotBy, float attemptedDamage)
 {
-	// CAREFUL: shotBy is destroyed after this call
+	// CAREFUL: shotBy actor is usually destroyed after this call
 	OnTakeDamage(attemptedDamage);
 }
 

@@ -19,15 +19,13 @@ class RSTEST_API AEarthSpike : public ABaseMagicPower
 	//Variables
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Spike Data")
-		float _lerpIncreaseRate;
+		float _interpAttackSpeed;
 
 	const float kPowerSize = 100.f;
 
 	FVector _attackLocation;
 
-	float _startingZScale;
 	float _scaleToReachTargetRoundedUp;
-	float _scaleLerpAlpha;
 
 	//GettersAndSetter
 public:
@@ -38,8 +36,21 @@ public:
 
 	//Functions
 protected:
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+		void OnAttackOverlapBegin(UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	virtual void PowerTick(float DeltaTime) override;
 
 public:
 	virtual void ActivatePower() override;
+
+	//Visuals and Colliders
+protected:
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
+		class UStaticMeshComponent* _powerMesh;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
+		class UBoxComponent* _attackTrigger;
 };
