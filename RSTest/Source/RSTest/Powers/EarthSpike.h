@@ -18,10 +18,16 @@ class RSTEST_API AEarthSpike : public ABaseMagicPower
 	
 	//Variables
 protected:
+	const float kPowerSize = 100.f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Spike Data")
 		float _interpAttackSpeed;
 
-	const float kPowerSize = 100.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Earth Spike Data")
+		float _attackPushPower;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Earth Spike Data")
+		float _attackPushUp;
 
 	FVector _attackLocation;
 

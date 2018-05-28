@@ -4,6 +4,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Runtime/Engine/Classes/Components/BoxComponent.h"
 #include "RSTestCharacter.h"
+#include "Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h"
+//#include "Engine.h" // For Debugging
 
 AEarthSpike::AEarthSpike()
 {
@@ -17,6 +19,8 @@ AEarthSpike::AEarthSpike()
 	_attackTrigger->bGenerateOverlapEvents = true;
 
 	_interpAttackSpeed = 25.f;
+	_attackPushPower = 1000.f;
+	_attackPushUp = 100.f;
 }
 
 void AEarthSpike::BeginPlay()
@@ -56,9 +60,16 @@ void AEarthSpike::OnAttackOverlapBegin(class UPrimitiveComponent* OverlappedComp
 		ARSTestCharacter* player = Cast<ARSTestCharacter>(OtherActor);
 
 		//player->OnTakeDamage(_damage);
-		//if (OtherComp->IsSimulatingPhysics())
-		//{
-		//	OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-		//}
+		if (player && _attackTrigger)
+		{
+			FVector pushDirection = ((OtherActor->GetActorLocation() - _attackTrigger->GetComponentLocation()) + FVector(0, _attackPushUp, 0)).GetSafeNormal();
+			//GEngine->AddOnScreenDebugMessage(-1, 800.f, FColor::Red, FString::SanitizeFloat(pushDirection.X) + " " + FString::SanitizeFloat(pushDirection.Y) + " " + FString::SanitizeFloat(pushDirection.Z)); // Debug for testing
+
+			if (!player->GetCharacterMovement()->IsFalling())
+			{
+				player->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+			}
+			player->GetCharacterMovement()->Velocity = (pushDirection * _attackPushPower);
+		}
 	}
 }

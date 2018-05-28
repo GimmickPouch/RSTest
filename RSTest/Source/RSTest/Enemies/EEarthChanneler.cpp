@@ -7,7 +7,7 @@
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Powers/EarthSpike.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
-#include "Engine.h"
+//#include "Engine.h" // For Debugging
 
 AEEarthChanneler::AEEarthChanneler()
 {
