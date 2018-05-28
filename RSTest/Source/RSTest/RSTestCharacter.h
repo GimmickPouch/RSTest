@@ -142,17 +142,29 @@ public:
 	//Variables
 protected:
 	//Health and damage system works in same way as enemies. This would ideally be made in to a component to avoid duplicate code.
-	UPROPERTY(EditDefaultsOnly, Category = "Player Data", meta = (ClampMin = 0))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Data", meta = (ClampMin = 0))
 		float _maxHealth;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Player Data")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Data")
 		float _invulnerabilityWindowSeconds;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
+		float _jumpStrafePowerPercentage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
+		float _jumpRedirectionPenalty;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
+		float _jumpConsecutivePowerPercentage;
 
 private:
 	FTimerHandle _invulnerableWindowHandle;
 
 	float _health;
 	bool _canTakeDamage;
+
+	float _holdingForward;
+	float _holdingRight;
 
 	//GettersAndSetters
 public:
@@ -166,6 +178,8 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Player Reactions")
 		virtual void OnTakeDamage(float damageAmount); //TakeDamage function name was taken by Pawn class
+
+	virtual void Jump() override;
 
 protected:
 	void EndInvulnerability();

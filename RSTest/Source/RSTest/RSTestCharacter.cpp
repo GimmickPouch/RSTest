@@ -12,6 +12,7 @@
 #include "MotionControllerComponent.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 #include "TimerManager.h"
+#include "Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -87,6 +88,10 @@ ARSTestCharacter::ARSTestCharacter()
 	// Luke added from here:
 	_maxHealth = 5.f;
 	_invulnerabilityWindowSeconds = 0.5f;
+
+	_jumpStrafePowerPercentage = 0.6f;
+	_jumpRedirectionPenalty = 0.75f;
+	_jumpConsecutivePowerPercentage = 1.0f;
 }
 
 void ARSTestCharacter::BeginPlay()
@@ -123,7 +128,7 @@ void ARSTestCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	check(PlayerInputComponent);
 
 	// Bind jump events
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ARSTestCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	// Bind fire event
@@ -270,6 +275,7 @@ void ARSTestCharacter::MoveForward(float Value)
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
+	_holdingForward = Value;
 }
 
 void ARSTestCharacter::MoveRight(float Value)
@@ -279,6 +285,7 @@ void ARSTestCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
+	_holdingRight = Value;
 }
 
 void ARSTestCharacter::TurnAtRate(float Rate)
@@ -304,8 +311,59 @@ bool ARSTestCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerIn
 		//PlayerInputComponent->BindTouch(EInputEvent::IE_Repeat, this, &ARSTestCharacter::TouchUpdate);
 		return true;
 	}
-	
+
 	return false;
+}
+
+// Override jumping to allow for redirecting mid-air on second jump to help avoid obstacles
+void ARSTestCharacter::Jump()
+{
+	UCharacterMovementComponent* characterMovement = GetCharacterMovement();
+
+	if (!characterMovement)
+	{
+		return;
+	}
+
+	if (characterMovement->CanEverJump())
+	{
+		if (JumpCurrentCount < JumpMaxCount)
+		{
+			JumpCurrentCount++;
+
+			FVector newVelocity = GetVelocity();
+
+			if (JumpCurrentCount > 1 && (_holdingForward != 0 || _holdingRight != 0)) //Double jump specifics if you're pressing any direction
+			{
+				FVector currentVelocityAbs = GetVelocity().GetAbs();
+				float velocityPower = currentVelocityAbs.X > currentVelocityAbs.Y ? currentVelocityAbs.X : currentVelocityAbs.Y;
+
+				newVelocity = ((GetActorRightVector() * _holdingRight) + (GetActorForwardVector() * _holdingForward)) * velocityPower;
+
+				if (FMath::Abs(_holdingForward) >= 0.8f && FMath::Abs(_holdingRight) >= 0.8f) //If you're strafing apply a penalty (or else you'll zoom too far!) - 0.8f because controllers on strafe will only go to about 0.6f each and we can use normal algorithm
+				{
+					newVelocity *= _jumpStrafePowerPercentage;
+				}
+
+
+				FVector currentVelNorm = GetVelocity().GetSafeNormal();
+				FVector newVelNorm = newVelocity.GetSafeNormal();
+
+				if (FVector::DotProduct(currentVelNorm, newVelNorm) < 0.45f)
+				{
+					newVelocity *= _jumpRedirectionPenalty; //If we're redirecting our double jump quite radically apply a penalty of velocity
+				}
+				newVelocity.Z = characterMovement->JumpZVelocity * _jumpConsecutivePowerPercentage;
+			}
+			else
+			{
+				newVelocity.Z = characterMovement->JumpZVelocity;
+			}
+
+			characterMovement->SetMovementMode(MOVE_Falling);
+			characterMovement->Velocity = newVelocity;
+		}
+	}
 }
 
 void ARSTestCharacter::OnTakeDamage(float damageAmount)
