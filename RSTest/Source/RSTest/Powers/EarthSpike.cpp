@@ -81,7 +81,7 @@ void AEarthSpike::OnAttackOverlapBegin(class UPrimitiveComponent* OverlappedComp
 	{
 		ARSTestCharacter* player = Cast<ARSTestCharacter>(OtherActor);
 
-		//player->OnTakeDamage(_damage);
+		player->OnTakeDamage(_damage);
 		if (player && _attackTrigger)
 		{
 			FVector pushDirection = ((OtherActor->GetActorLocation() - _attackTrigger->GetComponentLocation()) + FVector(0, _attackPushUp, 0)).GetSafeNormal();

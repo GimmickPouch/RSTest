@@ -82,6 +82,9 @@ ARSTestCharacter::ARSTestCharacter()
 
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
+
+	// Luke added from here:
+	_maxHealth = 5.f;
 }
 
 void ARSTestCharacter::BeginPlay()
@@ -103,6 +106,9 @@ void ARSTestCharacter::BeginPlay()
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
+
+	// Luke added from here:
+	_health = _maxHealth;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -297,4 +303,9 @@ bool ARSTestCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerIn
 	}
 	
 	return false;
+}
+
+void ARSTestCharacter::OnTakeDamage(float damageAmount)
+{
+	_health -= damageAmount;
 }

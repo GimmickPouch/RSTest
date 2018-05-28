@@ -93,5 +93,15 @@ void AEEarthChanneler::CreateEarthSpike(FVector& spawnLocation, FVector& attackL
 			);
 		newEarthSpike->SetAttackLocation(attackLocation);
 		newEarthSpike->ActivatePowerAfterDelay();
+
+		// Visibility to warn the user where they are going to get attacked from
+		// This would be replaced with a non-debug VFX - done for prototyping
+		DrawDebugLine(
+			GetWorld(),
+			GetActorLocation(),
+			spawnLocation,
+			FColor(255, 128, 0),
+			false, 0.6f, 0, 4
+		);
 	}
 }

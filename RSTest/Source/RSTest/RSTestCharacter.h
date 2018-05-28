@@ -137,5 +137,27 @@ public:
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	//Luke aadditions from here:
+	//Variables
+protected:
+	//Health and damage system works in same way as enemies. This would ideally be made in to a component to avoid duplicate code.
+	UPROPERTY(EditDefaultsOnly, Category = "Player Data", meta = (ClampMin = 0))
+		float _maxHealth;
+
+private:
+	float _health;
+
+	//GettersAndSetters
+public:
+	UFUNCTION(BlueprintCallable, Category = "Player GetSet")
+		float GetHealth() const { return _health; }
+
+	UFUNCTION(BlueprintCallable, Category = "Player GetSet")
+		float GetMaxHealth() const { return _maxHealth; }
+
+	//Functions
+	UFUNCTION(BlueprintCallable, Category = "Player Reactions")
+		virtual void OnTakeDamage(float damageAmount); //TakeDamage function name was taken by Pawn class
 };
 
