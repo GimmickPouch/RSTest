@@ -53,6 +53,13 @@ void AEarthSpike::ActivatePower()
 	Super::ActivatePower();
 }
 
+void AEarthSpike::ActivatePowerAfterDelay()
+{
+	SetActorScale3D(FVector(1, 1, 0.05f));
+
+	Super::ActivatePowerAfterDelay();
+}
+
 void AEarthSpike::PowerTick(float DeltaTime)
 {
 	SetActorScale3D(FVector(1, 1, FMath::FInterpConstantTo(GetActorScale().Z, _scaleToReachTargetRoundedUp, DeltaTime, _interpAttackSpeed)));

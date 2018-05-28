@@ -52,6 +52,8 @@ protected:
 public:
 	virtual void ActivatePower() override;
 
+	virtual void ActivatePowerAfterDelay() override;
+
 	//Visuals and Colliders
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
