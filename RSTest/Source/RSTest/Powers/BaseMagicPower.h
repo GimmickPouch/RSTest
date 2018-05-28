@@ -22,6 +22,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Magic Power Data")
 		float _attackActivationDelay;
 
+	FTimerHandle _powerActivationDelayHandle;
+
 	bool _powerHasBeenActivated;
 	bool _powerIsActive;
 
@@ -32,6 +34,10 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void PowerTick(float DeltaTime) {};
+
+	virtual void ActivatePowerAfterDelay();
+
+	void PowerBecomeActive();
 
 public:
 	virtual void ActivatePower();

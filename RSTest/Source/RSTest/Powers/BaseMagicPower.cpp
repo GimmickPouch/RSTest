@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BaseMagicPower.h"
-
+#include "TimerManager.h"
 
 ABaseMagicPower::ABaseMagicPower()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	_damage = 1.f;
-	_attackActivationDelay = 0.5f;
+	_attackActivationDelay = 0.0f;
 }
 
 void ABaseMagicPower::BeginPlay()
@@ -29,6 +29,23 @@ void ABaseMagicPower::Tick(float DeltaTime)
 }
 
 void ABaseMagicPower::ActivatePower()
+{
+	if (_attackActivationDelay > 0.f)
+	{
+		GetWorldTimerManager().SetTimer(_powerActivationDelayHandle, this, &ABaseMagicPower::ActivatePowerAfterDelay, _attackActivationDelay);
+	}
+	else
+	{
+		PowerBecomeActive();
+	}
+}
+
+void ABaseMagicPower::ActivatePowerAfterDelay()
+{
+	PowerBecomeActive();
+}
+
+void ABaseMagicPower::PowerBecomeActive()
 {
 	_powerHasBeenActivated = _powerIsActive = true;
 }

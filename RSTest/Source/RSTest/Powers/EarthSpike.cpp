@@ -18,6 +18,8 @@ AEarthSpike::AEarthSpike()
 	_attackTrigger->SetCanEverAffectNavigation(false);
 	_attackTrigger->bGenerateOverlapEvents = true;
 
+	_attackActivationDelay = 0.5f;
+
 	_interpAttackSpeed = 25.f;
 	_attackPushPower = 1000.f;
 	_attackPushUp = 100.f;
@@ -34,6 +36,7 @@ void AEarthSpike::ActivatePower()
 {
 	//_attackLocation needs to be set before activating the Earth Spike
 	_scaleToReachTargetRoundedUp = FMath::CeilToInt(((_attackLocation - GetActorLocation()).Size()) / kPowerSize);
+	_scaleToReachTargetRoundedUp += 1; //Just to make sure the block is going to try and go right through the player - adds more near-miss tension
 
 	Super::ActivatePower();
 }
