@@ -13,6 +13,8 @@
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 #include "TimerManager.h"
 #include "Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h"
+#include "Runtime/Engine/Classes/Components/BoxComponent.h"
+//#include "Runtime/Engine/Public/DrawDebugHelpers.h" // For debugging
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -86,12 +88,25 @@ ARSTestCharacter::ARSTestCharacter()
 	//bUsingMotionControllers = true;
 
 	// Luke added from here:
+	WallRunTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("WallRunOverlapTrigger"));
+	WallRunTrigger->SetupAttachment(RootComponent);
+	WallRunTrigger->SetCollisionProfileName("OverlapAll");
+	WallRunTrigger->bGenerateOverlapEvents = true;
+
 	_maxHealth = 5.f;
 	_invulnerabilityWindowSeconds = 0.5f;
 
 	_jumpStrafePowerPercentage = 0.6f;
 	_jumpRedirectionPenalty = 0.75f;
 	_jumpConsecutivePowerPercentage = 1.0f;
+
+	_canWallRun = true;
+	_wallRunEnterAngleLowerExclusive = 0.f;
+	_wallRunEnterAngleHigherExclusive = 80.f;
+	_wallRunRotateSpeed = 5.f;
+	_wallRunGravityScaleChange = 0.5f;
+	_wallRunPlayerRollAngleChange = 20.f;
+	_wallRunDistanceAcceptance = 100.f;
 }
 
 void ARSTestCharacter::BeginPlay()
@@ -115,8 +130,21 @@ void ARSTestCharacter::BeginPlay()
 	}
 
 	// Luke added from here:
+
+	WallRunTrigger->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
+
 	_health = _maxHealth;
 	_canTakeDamage = true;
+
+	//Wall run variables
+	_isWallRunning = false;
+	_currentWallRunIsOver = false;
+	_jumpCancelsWallRun = false;
+	_characterRotationAlpha = 1.f; // Start at 1 because we don't want this to start straight away (as it plays on Tick is < 1)
+	_wallRunVelocityAcceptance = 0.f; // 0 allows any velocity to start a wall run
+	_wallRunMaintainTrace = FVector();
+	_previousWallRunActor = nullptr;
+	_wallRunJumpHeightZ = 999999.f;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -275,6 +303,10 @@ void ARSTestCharacter::MoveForward(float Value)
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
+	else if (_isWallRunning && Value < 0) // Stop wall running if we hold back
+	{
+		WallRunEnd();
+	}
 	_holdingForward = Value;
 }
 
@@ -315,6 +347,88 @@ bool ARSTestCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerIn
 	return false;
 }
 
+void ARSTestCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (_characterRotationAlpha < 1.f)
+	{
+		RotateCharacterForWallRun(DeltaTime);
+	}
+
+	if (_isWallRunning)
+	{
+		WhileWallRunning();
+	}
+}
+
+void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!OverlappedComp ||
+		OverlappedComp != WallRunTrigger ||
+		_isWallRunning ||
+		!GetCharacterMovement()->IsFalling() ||
+		!OtherActor ||
+		OtherActor->IsA(APawn::StaticClass()) ||
+		!CheckVelocityIsAcceptableForWallRunning())
+	{
+		return;
+	}
+
+	FVector normDirectionToWall = OtherActor->GetActorLocation() - FirstPersonCameraComponent->GetComponentLocation().GetSafeNormal(); // This check would need to be refined for assets that aren't straight walls
+	bool activateFromRight = FVector::DotProduct(normDirectionToWall, FirstPersonCameraComponent->GetRightVector()) > 0 ? true : false;
+	FVector directionOfWallRun = activateFromRight ? FirstPersonCameraComponent->GetRightVector() : FirstPersonCameraComponent->GetRightVector() * -1;
+
+	FHitResult HitData(ForceInit);
+	FCollisionQueryParams TraceParams(FName(TEXT("WallRunTracer")), false, this);
+
+	FVector componentLocation = OverlappedComp->GetComponentTransform().GetLocation();
+	GetWorld()->LineTraceSingleByChannel(HitData, componentLocation, componentLocation + (directionOfWallRun * 400), ECC_Visibility, TraceParams);
+
+	if (HitData.GetActor())
+	{
+		FVector vectorPerpendicularToWall = FRotator(HitData.ImpactNormal.Rotation() + FRotator(0.f, 90.f, 0.f)).Vector(); //Line of wall run direction
+
+		_wallRunRotationAngle = FRotator(0.f, 0.f, -_wallRunPlayerRollAngleChange);
+		_wallRunMaintainTrace = directionOfWallRun * _wallRunDistanceAcceptance; //How far can you get from the wall until you're no longer wall running
+		if (!activateFromRight)
+		{
+			vectorPerpendicularToWall *= -1;
+			_wallRunRotationAngle *= -1;
+		}
+
+		FVector2D NormVelNoZ = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y).GetSafeNormal();
+
+		// Make sure that you cannot jump off a wall and then re-enter the same wall at a higher height - stops exploit
+		if (!_currentWallRunIsOver || !_previousWallRunActor || (_previousWallRunActor != OtherActor) || _wallRunJumpHeightZ > GetActorLocation().Z)
+		{
+			// Get the angle
+			float wallRunAttemptAngle = FMath::RadiansToDegrees(acosf(FVector2D::DotProduct(NormVelNoZ, FVector2D(vectorPerpendicularToWall.X, vectorPerpendicularToWall.Y))));
+
+			if (wallRunAttemptAngle > _wallRunEnterAngleLowerExclusive && wallRunAttemptAngle < _wallRunEnterAngleHigherExclusive) //A check to make sure you're entering at an accepted angle
+			{
+				_previousWallRunActor = OtherActor;
+ 				WallRunBegin(); //Finally, all checks have passed
+			}
+			else
+			{
+				_currentWallRunIsOver = true;
+			}
+		}
+	}
+}
+
+bool ARSTestCharacter::CheckVelocityIsAcceptableForWallRunning()
+{
+	bool result = false;
+	float currentVelocity = GetVelocity().GetAbs().Size();
+	if (currentVelocity >= _wallRunVelocityAcceptance)
+	{
+		result =  true;
+	}
+	return result;
+}
+
 // Override jumping to allow for redirecting mid-air on second jump to help avoid obstacles
 void ARSTestCharacter::Jump()
 {
@@ -327,31 +441,31 @@ void ARSTestCharacter::Jump()
 
 	if (characterMovement->CanEverJump())
 	{
+		FVector newVelocity = GetVelocity();
+
 		if (JumpCurrentCount < JumpMaxCount)
 		{
 			JumpCurrentCount++;
 
-			FVector newVelocity = GetVelocity();
-
-			if (JumpCurrentCount > 1 && (_holdingForward != 0 || _holdingRight != 0)) //Double jump specifics if you're pressing any direction
+			if (JumpCurrentCount > 1 && (_holdingForward != 0 || _holdingRight != 0)) // Double jump specifics if you're pressing any direction
 			{
 				FVector currentVelocityAbs = GetVelocity().GetAbs();
 				float velocityPower = currentVelocityAbs.X > currentVelocityAbs.Y ? currentVelocityAbs.X : currentVelocityAbs.Y;
 
 				newVelocity = ((GetActorRightVector() * _holdingRight) + (GetActorForwardVector() * _holdingForward)) * velocityPower;
 
-				if (FMath::Abs(_holdingForward) >= 0.8f && FMath::Abs(_holdingRight) >= 0.8f) //If you're strafing apply a penalty (or else you'll zoom too far!) - 0.8f because controllers on strafe will only go to about 0.6f each and we can use normal algorithm
+				// If you're strafing apply a penalty (or else you'll zoom too far!) - 0.8f because controllers on strafe will only go to about 0.6f each and we can use normal algorithm
+				if (FMath::Abs(_holdingForward) >= 0.8f && FMath::Abs(_holdingRight) >= 0.8f)
 				{
 					newVelocity *= _jumpStrafePowerPercentage;
 				}
-
 
 				FVector currentVelNorm = GetVelocity().GetSafeNormal();
 				FVector newVelNorm = newVelocity.GetSafeNormal();
 
 				if (FVector::DotProduct(currentVelNorm, newVelNorm) < 0.45f)
 				{
-					newVelocity *= _jumpRedirectionPenalty; //If we're redirecting our double jump quite radically apply a penalty of velocity
+					newVelocity *= _jumpRedirectionPenalty; // If we're redirecting our double jump quite radically we can apply a penalty of velocity
 				}
 				newVelocity.Z = characterMovement->JumpZVelocity * _jumpConsecutivePowerPercentage;
 			}
@@ -363,7 +477,26 @@ void ARSTestCharacter::Jump()
 			characterMovement->SetMovementMode(MOVE_Falling);
 			characterMovement->Velocity = newVelocity;
 		}
+
+		if (_isWallRunning && _jumpCancelsWallRun)
+		{
+			_wallRunJumpHeightZ = GetActorLocation().Z;
+			WallRunEnd();
+		}
 	}
+}
+
+//Overridden landed logic
+void ARSTestCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (_isWallRunning)
+	{
+		WallRunEnd();
+	}
+
+	_currentWallRunIsOver = false;
 }
 
 void ARSTestCharacter::OnTakeDamage(float damageAmount)
@@ -379,4 +512,87 @@ void ARSTestCharacter::OnTakeDamage(float damageAmount)
 void ARSTestCharacter::EndInvulnerability()
 {
 	_canTakeDamage = true;
+}
+
+void ARSTestCharacter::WallRunBegin()
+{
+	if (_isWallRunning)
+	{
+		return;
+	}
+
+	_isWallRunning = true;
+	if (JumpCurrentCount >= JumpMaxCount)
+	{
+		JumpCurrentCount--; // You get an extra jump when you enter a wall run so that you can jump off the wall
+	}
+
+	GetCharacterMovement()->GravityScale = _wallRunGravityScaleChange; // How the "wall run" feel and physics is simulated
+	StartRotateCharacterForWallRun(GetController()->GetControlRotation()); // Starts camera lean when wall running
+}
+
+//Constantly fire traces in the direction the wall run started until there's nothing to wall run on anymore (allows for spinning around as much as you want!)
+void ARSTestCharacter::WhileWallRunning()
+{
+	FHitResult HitData(ForceInit);
+	FCollisionQueryParams TraceParams(FName(TEXT("WhileWallRunningTracer")), false, this);
+
+	GetWorld()->LineTraceSingleByChannel(HitData, GetActorLocation(), GetActorLocation() + _wallRunMaintainTrace, ECC_Visibility, TraceParams);
+
+	if (!HitData.GetActor())
+	{
+		WallRunEnd();
+	}
+}
+
+void ARSTestCharacter::WallRunEnd()
+{
+	_isWallRunning = _jumpCancelsWallRun = false;
+
+	_currentWallRunIsOver = true;
+
+	GetCharacterMovement()->GravityScale = 1.f; //Return to normal gravity - may want to store this in a variable to allow for varied gravity scenarios
+	StartRotateCharacterForWallRun(GetController()->GetControlRotation()); // Starts camera lean back to normal
+}
+
+//Variables set to start rotation lerp
+void ARSTestCharacter::StartRotateCharacterForWallRun(const FRotator& startRotation)
+{
+	_startLerpCharacterRotation = startRotation;
+	_characterRotationAlpha = 0; //Starts the ticking of the lerp
+}
+
+//Logic for lerping the rotation of the character - works on a "dynamic" or not where "dynamic" represents if more than pure rotation logic is required
+void ARSTestCharacter::RotateCharacterForWallRun(float deltaTime)
+{
+	if (_characterRotationAlpha == 1)
+	{
+		return;
+	}
+
+	_characterRotationAlpha += (1 * _wallRunRotateSpeed) * deltaTime;
+
+	if (_characterRotationAlpha >= 1)
+	{
+		_jumpCancelsWallRun = true;
+		_characterRotationAlpha = 1.f;
+	}
+
+	FRotator controlRotation = GetController()->GetControlRotation();
+	if (_isWallRunning)
+	{
+		GetController()->SetControlRotation(FMath::Lerp(
+			FRotator(controlRotation.Pitch, controlRotation.Yaw, _startLerpCharacterRotation.Roll),
+			FRotator(controlRotation.Pitch, controlRotation.Yaw, _wallRunRotationAngle.Roll),
+			_characterRotationAlpha)
+		);
+	}
+	else
+	{
+		GetController()->SetControlRotation(FMath::Lerp(
+			FRotator(controlRotation.Pitch, controlRotation.Yaw, _startLerpCharacterRotation.Roll),
+			FRotator(controlRotation.Pitch, controlRotation.Yaw, 0.f),
+			_characterRotationAlpha)
+		);
+	}
 }

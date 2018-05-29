@@ -51,6 +51,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual void Tick(float DeltaTime) override;
+
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -166,6 +168,10 @@ private:
 	float _holdingForward;
 	float _holdingRight;
 
+	//Wall running
+private:
+	bool _canWallRun;
+
 	//GettersAndSetters
 public:
 	UFUNCTION(BlueprintCallable, Category = "Player GetSet")
@@ -174,14 +180,73 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Player GetSet")
 		float GetMaxHealth() const { return _maxHealth; }
 
+	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
+		bool GetCanWallRun() const { return _canWallRun; }
+	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
+		void SetCanWallRun(bool bSet = true) { _canWallRun = bSet; }
+
 	//Functions
 public:
+	UFUNCTION()
+		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	UFUNCTION(BlueprintCallable, Category = "Player Reactions")
 		virtual void OnTakeDamage(float damageAmount); //TakeDamage function name was taken by Pawn class
 
 	virtual void Jump() override;
 
 protected:
+	virtual void Landed(const FHitResult& Hit) override;
+
+	virtual void WallRunBegin();
+	virtual void WhileWallRunning();
+	virtual void WallRunEnd();
+
+	bool CheckVelocityIsAcceptableForWallRunning();
+
+	void StartRotateCharacterForWallRun(const FRotator& startRotation);
+
+	void RotateCharacterForWallRun(float deltaTime);
+
+protected:
 	void EndInvulnerability();
+
+	//Visuals and Triggers
+protected:
+	//WALL RUN
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		class UBoxComponent* WallRunTrigger;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
+		float _wallRunEnterAngleLowerExclusive;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
+		float _wallRunEnterAngleHigherExclusive;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+		float _wallRunGravityScaleChange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunRotateSpeed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunPlayerRollAngleChange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunVelocityAcceptance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunDistanceAcceptance;
+
+	bool _isWallRunning;
+	bool _currentWallRunIsOver;
+	FVector _wallRunMaintainTrace;
+	AActor* _previousWallRunActor;
+	float _wallRunJumpHeightZ;
+	bool _jumpCancelsWallRun;
+	FRotator _wallRunRotationAngle;
+
+	FRotator _startLerpCharacterRotation;
+	float _characterRotationAlpha;
 };
 
