@@ -6,7 +6,8 @@
 #include "CollisionQueryParams.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Powers/EarthSpike.h"
-#include "Runtime/Engine/Public/DrawDebugHelpers.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 //#include "Engine.h" // For Debugging
 
 AEEarthChanneler::AEEarthChanneler()
@@ -16,6 +17,12 @@ AEEarthChanneler::AEEarthChanneler()
 	if (earthSpike.Object)
 	{
 		_earthSpike = earthSpike.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> beamParticle (TEXT("/Game/VFX/EarthSpikeBeam.EarthSpikeBeam"));
+	if (beamParticle.Succeeded())
+	{
+		_attackBeamVFX = beamParticle.Object;
 	}
 
 	_attackRaycastLength = 5000.0f;
@@ -78,7 +85,7 @@ void AEEarthChanneler::Attack(FVector attackLocation)
 	}
 }
 
-//This function would ideally be extracted so that the Earth Spike power was easier to be equipped by multiple Actors/Characters
+//This function would ideally be extracted so that the Earth Spike power was easier to be equipped and used by multiple Actors/Characters
 void AEEarthChanneler::CreateEarthSpike(FVector& spawnLocation, FVector& attackLocation)
 {
 	UWorld* const world = GetWorld();
@@ -94,14 +101,16 @@ void AEEarthChanneler::CreateEarthSpike(FVector& spawnLocation, FVector& attackL
 		newEarthSpike->SetAttackLocation(attackLocation);
 		newEarthSpike->ActivatePowerAfterDelay();
 
-		// Visibility to warn the user where they are going to get attacked from
-		// This would be replaced with a non-debug VFX - done for prototyping
-		DrawDebugLine(
-			GetWorld(),
-			GetActorLocation(),
-			spawnLocation,
-			FColor(255, 128, 0),
-			false, 0.6f, 0, 4
-		);
+		if (_attackBeamVFX)
+		{
+			UParticleSystemComponent* ShootBeam = UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				_attackBeamVFX,
+				GetActorLocation(),
+				UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), spawnLocation),
+				true
+			);
+		}
+
 	}
 }

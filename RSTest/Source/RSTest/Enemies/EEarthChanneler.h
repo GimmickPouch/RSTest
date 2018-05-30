@@ -30,4 +30,8 @@ protected:
 	virtual void Attack(FVector attackLocation) override;
 
 	void CreateEarthSpike(FVector& spawnLocation, FVector& attackLocation);
+
+	//Particles
+protected:
+	UParticleSystem* _attackBeamVFX;
 };
