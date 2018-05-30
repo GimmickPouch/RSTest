@@ -88,10 +88,10 @@ ARSTestCharacter::ARSTestCharacter()
 	//bUsingMotionControllers = true;
 
 	// Luke added from here:
-	WallRunTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("WallRunOverlapTrigger"));
-	WallRunTrigger->SetupAttachment(RootComponent);
-	WallRunTrigger->SetCollisionProfileName("OverlapAll");
-	WallRunTrigger->bGenerateOverlapEvents = true;
+	_wallRunTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("WallRunOverlapTrigger"));
+	_wallRunTrigger->SetupAttachment(RootComponent);
+	_wallRunTrigger->SetCollisionProfileName("OverlapAll");
+	_wallRunTrigger->bGenerateOverlapEvents = true;
 
 	_maxHealth = 5.f;
 	_invulnerabilityWindowSeconds = 0.5f;
@@ -131,7 +131,7 @@ void ARSTestCharacter::BeginPlay()
 
 	// Luke added from here:
 
-	WallRunTrigger->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
+	_wallRunTrigger->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
 
 	_health = _maxHealth;
 	_canTakeDamage = true;
@@ -365,7 +365,7 @@ void ARSTestCharacter::Tick(float DeltaTime)
 void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!OverlappedComp ||
-		OverlappedComp != WallRunTrigger ||
+		OverlappedComp != _wallRunTrigger ||
 		_isWallRunning ||
 		!GetCharacterMovement()->IsFalling() ||
 		!OtherActor ||

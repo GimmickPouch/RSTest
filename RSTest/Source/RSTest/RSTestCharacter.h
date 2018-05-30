@@ -169,8 +169,39 @@ private:
 	float _holdingRight;
 
 	//Wall running
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
+		float _wallRunEnterAngleLowerExclusive;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
+		float _wallRunEnterAngleHigherExclusive;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+		float _wallRunGravityScaleChange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunRotateSpeed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunPlayerRollAngleChange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunVelocityAcceptance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		float _wallRunDistanceAcceptance;
+
 private:
 	bool _canWallRun;
+	bool _isWallRunning;
+	bool _currentWallRunIsOver;
+	FVector _wallRunMaintainTrace;
+	AActor* _previousWallRunActor;
+	float _wallRunJumpHeightZ;
+	bool _jumpCancelsWallRun;
+	FRotator _wallRunRotationAngle;
+	FRotator _startLerpCharacterRotation;
+	float _characterRotationAlpha;
 
 	//GettersAndSetters
 public:
@@ -213,40 +244,7 @@ protected:
 
 	//Visuals and Triggers
 protected:
-	//WALL RUN
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		class UBoxComponent* WallRunTrigger;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
-		float _wallRunEnterAngleLowerExclusive;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
-		float _wallRunEnterAngleHigherExclusive;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-		float _wallRunGravityScaleChange;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunRotateSpeed;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunPlayerRollAngleChange;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunVelocityAcceptance;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunDistanceAcceptance;
-
-	bool _isWallRunning;
-	bool _currentWallRunIsOver;
-	FVector _wallRunMaintainTrace;
-	AActor* _previousWallRunActor;
-	float _wallRunJumpHeightZ;
-	bool _jumpCancelsWallRun;
-	FRotator _wallRunRotationAngle;
-
-	FRotator _startLerpCharacterRotation;
-	float _characterRotationAlpha;
+		class UBoxComponent* _wallRunTrigger;
 };
 
