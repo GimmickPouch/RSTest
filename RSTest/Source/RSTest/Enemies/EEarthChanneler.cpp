@@ -28,7 +28,7 @@ AEEarthChanneler::AEEarthChanneler()
 	_attackRaycastLength = 5000.0f;
 }
 
-void AEEarthChanneler::Attack(FVector attackLocation)
+void AEEarthChanneler::Attack(const FVector& attackLocation)
 {
 	Super::Attack(attackLocation);
 
@@ -86,7 +86,7 @@ void AEEarthChanneler::Attack(FVector attackLocation)
 }
 
 //This function would ideally be extracted so that the Earth Spike power was easier to be equipped and used by multiple Actors/Characters
-void AEEarthChanneler::CreateEarthSpike(FVector& spawnLocation, FVector& attackLocation)
+void AEEarthChanneler::CreateEarthSpike(const FVector& spawnLocation, const FVector& attackLocation)
 {
 	UWorld* const world = GetWorld();
 	if (world && _earthSpike)

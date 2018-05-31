@@ -62,7 +62,7 @@ protected:
 	virtual bool CheckForDeath();
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy Actions")
-		virtual void Attack(FVector attackLocation) {};
+		virtual void Attack(const FVector& attackLocation) {};
 
 public:
 	virtual void OnShot(AActor* shotBy, float attemptedDamage);

@@ -5,7 +5,6 @@
 #include "Runtime/Engine/Classes/Components/BoxComponent.h"
 #include "RSTestCharacter.h"
 #include "Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h"
-//#include "Engine.h" // For Debugging
 
 AEarthSpike::AEarthSpike()
 {
@@ -36,6 +35,8 @@ void AEarthSpike::BeginPlay()
 	Super::BeginPlay();
 
 	_attackTrigger->OnComponentBeginOverlap.AddDynamic(this, &AEarthSpike::OnAttackOverlapBegin);
+
+	_baseScale = GetActorScale();
 }
 
 void AEarthSpike::ActivatePower()
@@ -55,14 +56,14 @@ void AEarthSpike::ActivatePower()
 
 void AEarthSpike::ActivatePowerAfterDelay()
 {
-	SetActorScale3D(FVector(1, 1, 0.05f));
+	SetActorScale3D(FVector(_baseScale.X, _baseScale.Y, 0.04f));
 
 	Super::ActivatePowerAfterDelay();
 }
 
 void AEarthSpike::PowerTick(float DeltaTime)
 {
-	SetActorScale3D(FVector(1, 1, FMath::FInterpConstantTo(GetActorScale().Z, _scaleToReachTargetRoundedUp, DeltaTime, _interpAttackSpeed)));
+	SetActorScale3D(FVector(_baseScale.X, _baseScale.Y, FMath::FInterpConstantTo(GetActorScale().Z, _scaleToReachTargetRoundedUp, DeltaTime, _interpAttackSpeed)));
 
 	if (FMath::IsNearlyEqual(GetActorScale().Z, _scaleToReachTargetRoundedUp, FLT_EPSILON))
 	{
@@ -85,7 +86,6 @@ void AEarthSpike::OnAttackOverlapBegin(class UPrimitiveComponent* OverlappedComp
 		if (player && _attackTrigger)
 		{
 			FVector pushDirection = ((OtherActor->GetActorLocation() - _attackTrigger->GetComponentLocation()) + FVector(0, _attackPushUp, 0)).GetSafeNormal();
-			//GEngine->AddOnScreenDebugMessage(-1, 800.f, FColor::Red, FString::SanitizeFloat(pushDirection.X) + " " + FString::SanitizeFloat(pushDirection.Y) + " " + FString::SanitizeFloat(pushDirection.Z)); // Debug for testing
 
 			if (!player->GetCharacterMovement()->IsFalling())
 			{

@@ -20,16 +20,16 @@ public:
 	//Variables
 protected:
 
-	UClass* _earthSpike;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Channeler Attack")
 		float _attackRaycastLength;
 
+	UClass* _earthSpike;
+
 	//Functions
 protected:
-	virtual void Attack(FVector attackLocation) override;
+	virtual void Attack(const FVector& attackLocation) override;
 
-	void CreateEarthSpike(FVector& spawnLocation, FVector& attackLocation);
+	void CreateEarthSpike(const FVector& spawnLocation, const FVector& attackLocation);
 
 	//Particles
 protected:

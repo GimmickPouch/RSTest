@@ -150,6 +150,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Data")
 		float _invulnerabilityWindowSeconds;
 
+	//Jump Re-direct
+protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
 		float _jumpStrafePowerPercentage;
 
@@ -168,15 +170,18 @@ private:
 	float _holdingForward;
 	float _holdingRight;
 
-	//Wall running
+	//Wall Running
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
+		bool _canEverWallRun;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
 		float _wallRunEnterAngleLowerExclusive;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
 		float _wallRunEnterAngleHigherExclusive;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
 		float _wallRunGravityScaleChange;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
@@ -192,16 +197,18 @@ protected:
 		float _wallRunDistanceAcceptance;
 
 private:
-	bool _canWallRun;
-	bool _isWallRunning;
-	bool _currentWallRunIsOver;
-	FVector _wallRunMaintainTrace;
 	AActor* _previousWallRunActor;
-	float _wallRunJumpHeightZ;
-	bool _jumpCancelsWallRun;
+	FVector _wallRunMaintainTrace;
 	FRotator _wallRunRotationAngle;
 	FRotator _startLerpCharacterRotation;
+
+	bool _isWallRunning;
+	bool _currentWallRunIsOver;
+	bool _jumpCancelsWallRun;
+
+	float _wallRunLastJumpHeightZ;
 	float _characterRotationAlpha;
+	float _gravityOnWallRunStart;
 
 	//GettersAndSetters
 public:
@@ -212,9 +219,9 @@ public:
 		float GetMaxHealth() const { return _maxHealth; }
 
 	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
-		bool GetCanWallRun() const { return _canWallRun; }
+		bool GetCanWallRun() const { return _canEverWallRun; }
 	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
-		void SetCanWallRun(bool bSet = true) { _canWallRun = bSet; }
+		void SetCanWallRun(bool bSet = true) { _canEverWallRun = bSet; }
 
 	//Functions
 public:
@@ -239,7 +246,6 @@ protected:
 
 	void RotateCharacterForWallRun(float deltaTime);
 
-protected:
 	void EndInvulnerability();
 
 	//Visuals and Triggers
