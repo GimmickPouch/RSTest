@@ -33,6 +33,6 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile Data", meta = (ClampMin = 0))
-		float _damage;
+	float _damage;
 };
 

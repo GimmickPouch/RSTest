@@ -18,10 +18,10 @@ public:
 	//Variables
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Life System Data", meta = (ClampMin = 0))
-		float _maxHealth;
+	float _maxHealth;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Life System Data")
-		float _invulnerabilityWindowSeconds;
+	float _invulnerabilityWindowSeconds;
 
 private:
 	float _health;
@@ -32,22 +32,23 @@ private:
 	//GettersAndSetters
 public:
 	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
-		float GetHealth() const { return _health; }
+	float GetHealth() const { return _health; }
 	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
-		void SetHealth(float newHealth) { _health = newHealth; }
-	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
-		void IncreaseHealth(float increaseAmount) { _health += increaseAmount; if (_health > _maxHealth) { _health = _maxHealth; } };
-	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
-		void DecreaseHealth(float decreaseAmount) { _health -= decreaseAmount;  if (_health < 0) { _health = 0; } };
+	void SetHealth(float newHealth) { _health = newHealth; }
 
 	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
-		float GetMaxHealth() const { return _maxHealth; }
+	void IncreaseHealth(float increaseAmount) { _health += increaseAmount; if (_health > _maxHealth) { _health = _maxHealth; } };
+	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
+	void DecreaseHealth(float decreaseAmount) { _health -= decreaseAmount;  if (_health < 0) { _health = 0; } };
 
 	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
-		bool GetIsDead() const { return _isDead; }
+	float GetMaxHealth() const { return _maxHealth; }
+
+	UFUNCTION(BlueprintCallable, Category = "Life System GetSet")
+	bool GetIsDead() const { return _isDead; }
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy Reactions")
-		virtual void OnTakeDamage(float damageAmount); // TakeDamage is being used by Pawn class
+	virtual void OnTakeDamage(float damageAmount); // TakeDamage is being used by Pawn class
 
 protected:
 	virtual void BeginPlay() override;

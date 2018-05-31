@@ -19,13 +19,13 @@ class RSTEST_API AEarthSpike : public ABaseMagicPower
 	//Variables
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Spike Data")
-		float _interpAttackSpeed;
+	float _interpAttackSpeed;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Spike Data")
-		float _attackPushPower;
+	float _attackPushPower;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Spike Data")
-		float _attackPushUp;
+	float _attackPushUp;
 
 	const float kPowerSize = 100.f;
 
@@ -37,16 +37,16 @@ protected:
 	//GettersAndSetter
 public:
 	UFUNCTION(BlueprintCallable, Category = "Earth Spike GetSet")
-		FVector GetAttackLocation() const { return _attackLocation; }
+	FVector GetAttackLocation() const { return _attackLocation; }
 	UFUNCTION(BlueprintCallable, Category = "Earth Spike GetSet")
-		void SetAttackLocation(FVector location) { _attackLocation = location; }
+	void SetAttackLocation(FVector location) { _attackLocation = location; }
 
 	//Functions
 protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-		void OnAttackOverlapBegin(UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnAttackOverlapBegin(UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	virtual void PowerTick(float DeltaTime) override;
 
@@ -58,11 +58,11 @@ public:
 	//Visuals and Colliders
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		class UStaticMeshComponent* _powerMesh;
+	class UStaticMeshComponent* _powerMesh;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		class UBoxComponent* _attackTrigger;
+	class UBoxComponent* _attackTrigger;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		class UStaticMeshComponent* _visualWarning;
+	class UStaticMeshComponent* _visualWarning;
 };

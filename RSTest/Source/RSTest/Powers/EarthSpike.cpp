@@ -26,8 +26,8 @@ AEarthSpike::AEarthSpike()
 	_attackActivationDelay = 0.5f;
 
 	_interpAttackSpeed = 25.f;
-	_attackPushPower = 1000.f;
-	_attackPushUp = 100.f;
+	_attackPushPower = 2000.f;
+	_attackPushUp = 10.f;
 }
 
 void AEarthSpike::BeginPlay()
@@ -85,13 +85,14 @@ void AEarthSpike::OnAttackOverlapBegin(class UPrimitiveComponent* OverlappedComp
 		player->OnAttacked(this, _damage);
 		if (player && _attackTrigger)
 		{
-			FVector pushDirection = ((OtherActor->GetActorLocation() - _attackTrigger->GetComponentLocation()) + FVector(0, _attackPushUp, 0)).GetSafeNormal();
+			FVector pushDirection = OtherActor->GetActorLocation() - _attackTrigger->GetComponentTransform().GetLocation();
+			FVector pushNormal = FVector(pushDirection.X, pushDirection.Y, _attackPushUp).GetSafeNormal();
 
 			if (!player->GetCharacterMovement()->IsFalling())
 			{
 				player->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 			}
-			player->GetCharacterMovement()->Velocity = (pushDirection * _attackPushPower);
+			player->GetCharacterMovement()->Velocity = (pushNormal * _attackPushPower);
 		}
 	}
 }

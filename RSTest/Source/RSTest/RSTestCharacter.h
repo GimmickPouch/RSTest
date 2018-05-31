@@ -152,19 +152,19 @@ public:
 	//Components
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Data")
-		ULifeSystem* LifeSystem;
+	ULifeSystem* LifeSystem;
 
 	//Variables
 	//Jump Re-direct
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
-		float _jumpStrafePowerPercentage;
+	float _jumpStrafePowerPercentage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
-		float _jumpRedirectionPenalty;
+	float _jumpRedirectionPenalty;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
-		float _jumpConsecutivePowerPercentage;
+	float _jumpConsecutivePowerPercentage;
 
 	//Wall Running
 private:
@@ -173,28 +173,28 @@ private:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		bool _canEverWallRun;
+	bool _canEverWallRun;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
-		float _wallRunEnterAngleLowerExclusive;
+	float _wallRunEnterAngleLowerExclusive;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data", meta = (ClampMin = "-180.0", ClampMax = "180.0"))
-		float _wallRunEnterAngleHigherExclusive;
+	float _wallRunEnterAngleHigherExclusive;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunGravityScaleChange;
+	float _wallRunGravityScaleChange;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunRotateSpeed;
+	float _wallRunRotateSpeed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunPlayerRollAngleChange;
+	float _wallRunPlayerRollAngleChange;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunVelocityAcceptance;
+	float _wallRunVelocityAcceptance;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
-		float _wallRunDistanceAcceptance;
+	float _wallRunDistanceAcceptance;
 
 private:
 	AActor* _previousWallRunActor;
@@ -213,18 +213,18 @@ private:
 	//GettersAndSetters
 public:
 	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
-		bool GetCanWallRun() const { return _canEverWallRun; }
+	bool GetCanWallRun() const { return _canEverWallRun; }
 	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
-		void SetCanWallRun(bool bSet = true) { _canEverWallRun = bSet; }
+	void SetCanWallRun(bool bSet = true) { _canEverWallRun = bSet; }
 
 	//Functions
 public:
+	virtual void Jump() override;
+
 	virtual void OnAttacked(AActor* attackedBy, float attemptedDamage);
 
 	UFUNCTION()
-		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	virtual void Jump() override;
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 protected:
 	virtual void Landed(const FHitResult& Hit) override;
@@ -244,8 +244,8 @@ protected:
 	//Visuals and Triggers
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		class UBoxComponent* _wallRunTriggerLeft;
+	class UBoxComponent* _wallRunTriggerLeft;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		class UBoxComponent* _wallRunTriggerRight;
+	class UBoxComponent* _wallRunTriggerRight;
 };

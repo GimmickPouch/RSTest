@@ -21,7 +21,7 @@ public:
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Earth Channeler Attack")
-		float _attackRaycastLength;
+	float _attackRaycastLength;
 
 	UClass* _earthSpike;
 

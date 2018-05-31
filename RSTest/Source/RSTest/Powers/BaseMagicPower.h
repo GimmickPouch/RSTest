@@ -17,10 +17,10 @@ public:
 	//Variables
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Magic Power Data")
-		float _damage;
+	float _damage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Magic Power Data")
-		float _attackActivationDelay;
+	float _attackActivationDelay;
 
 	FTimerHandle _powerActivationDelayHandle;
 
@@ -30,14 +30,14 @@ protected:
 	//GettersAndSetter
 public:
 	UFUNCTION(BlueprintCallable, Category = "Magic Power GetSet")
-		bool GetPowerHasBeenActivated() const { return _powerHasBeenActivated; }
+	bool GetPowerHasBeenActivated() const { return _powerHasBeenActivated; }
 	UFUNCTION(BlueprintCallable, Category = "Magic Power GetSet")
-		void SetPowerHasBeenActivated(bool value) { _powerHasBeenActivated = value; }
+	void SetPowerHasBeenActivated(bool value) { _powerHasBeenActivated = value; }
 
 	UFUNCTION(BlueprintCallable, Category = "Magic Power GetSet")
-		bool GetPowerIsActive() const { return _powerIsActive; }
+	bool GetPowerIsActive() const { return _powerIsActive; }
 	UFUNCTION(BlueprintCallable, Category = "Magic Power GetSet")
-		void SetPowerIsActive(bool value) { _powerIsActive = value; }
+	void SetPowerIsActive(bool value) { _powerIsActive = value; }
 
 	//Functions
 protected:

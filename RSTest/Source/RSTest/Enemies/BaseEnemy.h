@@ -19,17 +19,17 @@ public:
 	//Components
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Data")
-		ULifeSystem* LifeSystem;
+	ULifeSystem* LifeSystem;
 
 	//Variables
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Data")
-		float _movementSpeed;
+	float _movementSpeed;
 
 	//Functions
 protected:
 	UFUNCTION(BlueprintCallable, Category = "Enemy Actions")
-		virtual void Attack(const FVector& attackLocation) {};
+	virtual void Attack(const FVector& attackLocation) {};
 
 public:
 	virtual void OnAttacked(AActor* attackedBy, float attemptedDamage);

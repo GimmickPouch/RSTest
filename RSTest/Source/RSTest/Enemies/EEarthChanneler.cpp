@@ -8,7 +8,6 @@
 #include "Powers/EarthSpike.h"
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
-//#include "Engine.h" // For Debugging
 
 AEEarthChanneler::AEEarthChanneler()
 {
@@ -66,8 +65,6 @@ void AEEarthChanneler::Attack(const FVector& attackLocation)
 				traceParams
 			);
 
-			//GEngine->AddOnScreenDebugMessage(-1, 800.f, FColor::Red, FString::SanitizeFloat((hitData.Location - attackLocation).Size())); // Debug for testing
-
 			if (hitData.GetActor() && 
 				!hitData.GetActor()->IsA(ACharacter::StaticClass()) && 
 				(closestSpawnPosition == nullptr || 
@@ -85,7 +82,7 @@ void AEEarthChanneler::Attack(const FVector& attackLocation)
 	}
 }
 
-//This function would ideally be extracted so that the Earth Spike power was easier to be equipped and used by multiple Actors/Characters
+// This function would ideally be extracted so that the Earth Spike power was easier to be equipped and used by multiple Actors/Characters and enemies could more easily fire any BaseMagicPower.cpp
 void AEEarthChanneler::CreateEarthSpike(const FVector& spawnLocation, const FVector& attackLocation)
 {
 	UWorld* const world = GetWorld();
@@ -103,13 +100,13 @@ void AEEarthChanneler::CreateEarthSpike(const FVector& spawnLocation, const FVec
 
 		if (_attackBeamVFX)
 		{
-			UParticleSystemComponent* ShootBeam = UGameplayStatics::SpawnEmitterAtLocation(
+			UParticleSystemComponent* shootBeam = UGameplayStatics::SpawnEmitterAtLocation(
 				GetWorld(),
 				_attackBeamVFX,
-				GetActorLocation(),
-				UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), spawnLocation),
-				true
+				GetActorLocation()
 			);
+			shootBeam->SetBeamSourcePoint(0, GetActorLocation(), 0);
+			shootBeam->SetBeamTargetPoint(0, spawnLocation, 0);
 		}
 
 	}
