@@ -376,20 +376,28 @@ void ARSTestCharacter::Tick(float DeltaTime)
 
 void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!OverlappedComp ||
-		(OverlappedComp != _wallRunTriggerLeft && OverlappedComp != _wallRunTriggerRight) ||
-		_isWallRunning ||
+	if (OverlappedComp && (OverlappedComp == _wallRunTriggerLeft || OverlappedComp == _wallRunTriggerRight))
+	{
+		EWallRunEntrySide wallRunSide = OverlappedComp == _wallRunTriggerLeft ? EWallRunEntrySide::WR_Left : EWallRunEntrySide::WR_Right;
+		CheckWillWallRun(wallRunSide, OverlappedComp->GetComponentTransform().GetLocation(), OtherActor);
+	}
+}
+
+bool ARSTestCharacter::CheckWillWallRun(EWallRunEntrySide sideOfActivation, FVector wallRunTriggerLocation, AActor* wallRunOnActor)
+{
+	if (_isWallRunning ||
 		!GetCharacterMovement()->IsFalling() ||
-		!OtherActor ||
-		OtherActor->IsA(APawn::StaticClass()) ||
+		!wallRunOnActor ||
+		wallRunOnActor->IsA(APawn::StaticClass()) ||
 		!CheckVelocityIsAcceptableForWallRunning())
 	{
-		return;
+		return false;
 	}
 
-	bool activateFromRight = OverlappedComp == _wallRunTriggerRight;
+	bool result = false;
+
 	FVector directionOfWallRun = FirstPersonCameraComponent->GetRightVector();
-	if (!activateFromRight)
+	if (sideOfActivation == EWallRunEntrySide::WR_Left)
 	{
 		directionOfWallRun *= -1;
 	}
@@ -397,33 +405,33 @@ void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
 	FHitResult hitData(ForceInit);
 	FCollisionQueryParams traceParams(FName(TEXT("WallRunTracer")), false, this);
 
-	FVector componentLocation = OverlappedComp->GetComponentTransform().GetLocation();
-	GetWorld()->LineTraceSingleByChannel(hitData, componentLocation, componentLocation + (directionOfWallRun * 400), ECC_Visibility, traceParams);
+	GetWorld()->LineTraceSingleByChannel(hitData, wallRunTriggerLocation, wallRunTriggerLocation + (directionOfWallRun * 400), ECC_Visibility, traceParams);
 
 	if (hitData.GetActor())
 	{
 		FVector vectorPerpendicularToWall = FRotator(hitData.ImpactNormal.Rotation() + FRotator(0.f, 90.f, 0.f)).Vector(); // Line of wall run direction
 
-		_wallRunRotationAngle = FRotator(0.f, 0.f, -_wallRunPlayerRollAngleChange); 
+		_wallRunRotationAngle = FRotator(0.f, 0.f, -_wallRunPlayerRollAngleChange);
 
 		_wallRunMaintainTrace = directionOfWallRun * _wallRunDistanceAcceptance; // How far can you get from the wall until you're no longer wall running
-		if (!activateFromRight)
+		if (sideOfActivation == EWallRunEntrySide::WR_Left)
 		{
 			vectorPerpendicularToWall *= -1;
 			_wallRunRotationAngle *= -1;
 		}
 
 		// Make sure that you cannot jump off a wall and then re-enter the same wall at a higher height - stops exploit
-		if (!_currentWallRunIsOver || !_previousWallRunActor || (_previousWallRunActor != OtherActor) || _wallRunLastJumpHeightZ > GetActorLocation().Z)
+		if (!_currentWallRunIsOver || !_previousWallRunActor || (_previousWallRunActor != wallRunOnActor) || _wallRunLastJumpHeightZ > GetActorLocation().Z)
 		{
 			FVector2D normVelNoZ = FVector2D(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y).GetSafeNormal();
-			// Get the angle
+			// Get the angle you're travelling compared to the line perpendicular to the wall
 			float wallRunAttemptAngle = FMath::RadiansToDegrees(acosf(FVector2D::DotProduct(normVelNoZ, FVector2D(vectorPerpendicularToWall.X, vectorPerpendicularToWall.Y))));
 
 			if (wallRunAttemptAngle > _wallRunEnterAngleLowerExclusive && wallRunAttemptAngle < _wallRunEnterAngleHigherExclusive) // A check to make sure you're entering at an accepted angle
 			{
-				_previousWallRunActor = OtherActor;
- 				WallRunBegin();
+				_previousWallRunActor = wallRunOnActor;
+				WallRunBegin();
+				result = true;
 			}
 			else
 			{
@@ -431,6 +439,8 @@ void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
 			}
 		}
 	}
+
+	return result;
 }
 
 bool ARSTestCharacter::CheckVelocityIsAcceptableForWallRunning()

@@ -6,6 +6,13 @@
 #include "GameFramework/Character.h"
 #include "RSTestCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class EWallRunEntrySide : uint8
+{
+	WR_Left 	UMETA(DisplayName = "Left"),
+	WR_Right 	UMETA(DisplayName = "Right"),
+};
+
 class UInputComponent;
 
 UCLASS(config=Game)
@@ -240,6 +247,8 @@ protected:
 	virtual void WhileWallRunning();
 	virtual void WallRunEnd();
 
+	bool CheckWillWallRun(EWallRunEntrySide sideOfActivation, FVector wallRunTriggerLocation, AActor* wallRunOnActor);
+
 	bool CheckVelocityIsAcceptableForWallRunning();
 
 	void StartRotateCharacterForWallRun(const FRotator& startRotation);
@@ -256,4 +265,3 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		class UBoxComponent* _wallRunTriggerRight;
 };
-
