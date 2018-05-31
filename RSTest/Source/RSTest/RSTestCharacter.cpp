@@ -16,7 +16,6 @@
 #include "Runtime/Engine/Classes/Components/BoxComponent.h"
 #include "Powers/BaseMagicPower.h"
 #include "Components/LifeSystem.h"
-//#include "Runtime/Engine/Public/DrawDebugHelpers.h" // For debugging
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -373,6 +372,63 @@ void ARSTestCharacter::Tick(float DeltaTime)
 	}
 }
 
+// Override jumping to allow for redirecting mid-air on second jump to help avoid obstacles
+void ARSTestCharacter::Jump()
+{
+	UCharacterMovementComponent* characterMovement = GetCharacterMovement();
+
+	if (!characterMovement)
+	{
+		return;
+	}
+
+	if (characterMovement->CanEverJump())
+	{
+		FVector newVelocity = GetVelocity();
+
+		if (JumpCurrentCount < JumpMaxCount)
+		{
+			JumpCurrentCount++;
+
+			if (JumpCurrentCount > 1 && (_holdingForward != 0 || _holdingRight != 0)) // Double jump specifics if you're pressing any direction
+			{
+				FVector currentVelocityAbs = GetVelocity().GetAbs();
+				float velocityPower = currentVelocityAbs.X > currentVelocityAbs.Y ? currentVelocityAbs.X : currentVelocityAbs.Y;
+
+				newVelocity = ((GetActorRightVector() * _holdingRight) + (GetActorForwardVector() * _holdingForward)) * velocityPower;
+
+				// If you're strafing apply a penalty (or else you'll zoom too far!) - 0.8f because controllers on strafe will only go to about 0.6f each and we can use normal algorithm
+				if (FMath::Abs(_holdingForward) >= 0.8f && FMath::Abs(_holdingRight) >= 0.8f)
+				{
+					newVelocity *= _jumpStrafePowerPercentage;
+				}
+
+				FVector currentVelNorm = GetVelocity().GetSafeNormal();
+				FVector newVelNorm = newVelocity.GetSafeNormal();
+
+				if (FVector::DotProduct(currentVelNorm, newVelNorm) < 0.45f)
+				{
+					newVelocity *= _jumpRedirectionPenalty; // If we're redirecting our double jump quite radically we can apply a penalty of velocity
+				}
+				newVelocity.Z = characterMovement->JumpZVelocity * _jumpConsecutivePowerPercentage;
+			}
+			else
+			{
+				newVelocity.Z = characterMovement->JumpZVelocity;
+			}
+
+			characterMovement->SetMovementMode(MOVE_Falling);
+			characterMovement->Velocity = newVelocity;
+		}
+
+		if (_isWallRunning && _jumpCancelsWallRun)
+		{
+			_wallRunLastJumpHeightZ = GetActorLocation().Z;
+			WallRunEnd();
+		}
+	}
+}
+
 void ARSTestCharacter::OnAttacked(AActor* attackedBy, float attemptedDamage)
 {
 	// CAUTION: Projeciles are likely to be destroyed after hitting player (attackedBy)
@@ -402,7 +458,7 @@ bool ARSTestCharacter::CheckWillWallRun(EWallRunEntrySide sideOfActivation, FVec
 	if (wallRunOnActor->IsA(ABaseMagicPower::StaticClass()))
 	{
 		ABaseMagicPower* power = Cast<ABaseMagicPower>(wallRunOnActor);
-		if (!power->GetPowerIsActive())
+		if (!power->GetPowerHasBeenActivated())
 		{
 			// Stops earth spikes from spawning next to you on the wall and counting as a new wall run which provides a new jump
 			return false;
@@ -467,63 +523,6 @@ bool ARSTestCharacter::CheckVelocityIsAcceptableForWallRunning()
 		result =  true;
 	}
 	return result;
-}
-
-// Override jumping to allow for redirecting mid-air on second jump to help avoid obstacles
-void ARSTestCharacter::Jump()
-{
-	UCharacterMovementComponent* characterMovement = GetCharacterMovement();
-
-	if (!characterMovement)
-	{
-		return;
-	}
-
-	if (characterMovement->CanEverJump())
-	{
-		FVector newVelocity = GetVelocity();
-
-		if (JumpCurrentCount < JumpMaxCount)
-		{
-			JumpCurrentCount++;
-
-			if (JumpCurrentCount > 1 && (_holdingForward != 0 || _holdingRight != 0)) // Double jump specifics if you're pressing any direction
-			{
-				FVector currentVelocityAbs = GetVelocity().GetAbs();
-				float velocityPower = currentVelocityAbs.X > currentVelocityAbs.Y ? currentVelocityAbs.X : currentVelocityAbs.Y;
-
-				newVelocity = ((GetActorRightVector() * _holdingRight) + (GetActorForwardVector() * _holdingForward)) * velocityPower;
-
-				// If you're strafing apply a penalty (or else you'll zoom too far!) - 0.8f because controllers on strafe will only go to about 0.6f each and we can use normal algorithm
-				if (FMath::Abs(_holdingForward) >= 0.8f && FMath::Abs(_holdingRight) >= 0.8f)
-				{
-					newVelocity *= _jumpStrafePowerPercentage;
-				}
-
-				FVector currentVelNorm = GetVelocity().GetSafeNormal();
-				FVector newVelNorm = newVelocity.GetSafeNormal();
-
-				if (FVector::DotProduct(currentVelNorm, newVelNorm) < 0.45f)
-				{
-					newVelocity *= _jumpRedirectionPenalty; // If we're redirecting our double jump quite radically we can apply a penalty of velocity
-				}
-				newVelocity.Z = characterMovement->JumpZVelocity * _jumpConsecutivePowerPercentage;
-			}
-			else
-			{
-				newVelocity.Z = characterMovement->JumpZVelocity;
-			}
-
-			characterMovement->SetMovementMode(MOVE_Falling);
-			characterMovement->Velocity = newVelocity;
-		}
-
-		if (_isWallRunning && _jumpCancelsWallRun)
-		{
-			_wallRunLastJumpHeightZ = GetActorLocation().Z;
-			WallRunEnd();
-		}
-	}
 }
 
 void ARSTestCharacter::Landed(const FHitResult& Hit)
