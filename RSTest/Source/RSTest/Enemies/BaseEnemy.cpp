@@ -2,70 +2,24 @@
 
 #include "BaseEnemy.h"
 #include "TimerManager.h"
+#include "Components/LifeSystem.h"
 
 ABaseEnemy::ABaseEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	//_enemyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyMesh"));
-	//_enemyMesh->SetupAttachment(RootComponent);
+	LifeSystem = CreateDefaultSubobject<ULifeSystem>(TEXT("LifeSystem"));
+	AddOwnedComponent(LifeSystem);
 
-	_maxHealth = 100;
-	_invulnerabilityWindowSeconds = 0.5f;
-
-	_isDead = false;
-	_canTakeDamage = true;
+	_movementSpeed = 1.f;
 }
 
-void ABaseEnemy::BeginPlay()
+void ABaseEnemy::OnAttacked(AActor* attackedBy, float attemptedDamage)
 {
-	Super::BeginPlay();
-
-	_health = _maxHealth;
-	CheckForDeath(); // In case they start at 0 health
-}
-
-void ABaseEnemy::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void ABaseEnemy::OnShot(AActor* shotBy, float attemptedDamage)
-{
-	// CAREFUL: shotBy actor is usually destroyed after this call
-	OnTakeDamage(attemptedDamage);
-}
-
-void ABaseEnemy::OnTakeDamage(float damageAmount)
-{
-	if (!_isDead && _canTakeDamage)
+	// CAUTION: attackedBy actor is usually destroyed after this call if it's a player projectile
+	LifeSystem->OnTakeDamage(attemptedDamage);
+	if (LifeSystem->GetIsDead())
 	{
-		DecreaseHealth(damageAmount);
-		if (!CheckForDeath())
-		{
-			_canTakeDamage = false;
-			GetWorldTimerManager().SetTimer(_invulnerableWindowHandle, this, &ABaseEnemy::EndInvulnerability, _invulnerabilityWindowSeconds);
-		}
-		else
-		{
-			Destroy();
-		}
+		Destroy();
 	}
-}
-
-void ABaseEnemy::EndInvulnerability()
-{
-	_canTakeDamage = true;
-}
-
-bool ABaseEnemy::CheckForDeath()
-{
-	if (_health <= 0)
-	{
-		PrimaryActorTick.bCanEverTick = false;
-		_isDead = true;
-	}
-	return _isDead;
 }

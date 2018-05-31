@@ -14,6 +14,7 @@ enum class EWallRunEntrySide : uint8
 };
 
 class UInputComponent;
+class ULifeSystem;
 
 UCLASS(config=Game)
 class ARSTestCharacter : public ACharacter
@@ -148,15 +149,12 @@ public:
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 	//Luke aadditions from here:
-	//Variables
-protected:
-	//Health and damage system works in same way as enemies. This would ideally be made in to a component to avoid duplicate code.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Data", meta = (ClampMin = 0))
-		float _maxHealth;
-
+	//Components
+public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Data")
-		float _invulnerabilityWindowSeconds;
+		ULifeSystem* LifeSystem;
 
+	//Variables
 	//Jump Re-direct
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
@@ -168,16 +166,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Jump Data", meta = (ClampMin = 0.1, ClampMax = 1.0))
 		float _jumpConsecutivePowerPercentage;
 
+	//Wall Running
 private:
-	FTimerHandle _invulnerableWindowHandle;
-
-	float _health;
-	bool _canTakeDamage;
-
 	float _holdingForward;
 	float _holdingRight;
 
-	//Wall Running
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Wall Run Data")
 		bool _canEverWallRun;
@@ -219,12 +212,6 @@ private:
 
 	//GettersAndSetters
 public:
-	UFUNCTION(BlueprintCallable, Category = "Player GetSet")
-		float GetHealth() const { return _health; }
-
-	UFUNCTION(BlueprintCallable, Category = "Player GetSet")
-		float GetMaxHealth() const { return _maxHealth; }
-
 	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
 		bool GetCanWallRun() const { return _canEverWallRun; }
 	UFUNCTION(BlueprintCallable, Category = "Player Feature Active GetSet")
@@ -232,11 +219,10 @@ public:
 
 	//Functions
 public:
+	virtual void OnAttacked(AActor* attackedBy, float attemptedDamage);
+
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION(BlueprintCallable, Category = "Player Reactions")
-		virtual void OnTakeDamage(float damageAmount); //TakeDamage function name was taken by Pawn class
 
 	virtual void Jump() override;
 
@@ -254,8 +240,6 @@ protected:
 	void StartRotateCharacterForWallRun(const FRotator& startRotation);
 
 	void RotateCharacterForWallRun(float deltaTime);
-
-	void EndInvulnerability();
 
 	//Visuals and Triggers
 protected:

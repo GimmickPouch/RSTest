@@ -14,6 +14,8 @@
 #include "TimerManager.h"
 #include "Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Classes/Components/BoxComponent.h"
+#include "Powers/BaseMagicPower.h"
+#include "Components/LifeSystem.h"
 //#include "Runtime/Engine/Public/DrawDebugHelpers.h" // For debugging
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -99,8 +101,8 @@ ARSTestCharacter::ARSTestCharacter()
 	_wallRunTriggerRight->SetCollisionProfileName("OverlapAll");
 	_wallRunTriggerRight->bGenerateOverlapEvents = true;
 
-	_maxHealth = 5.f;
-	_invulnerabilityWindowSeconds = 0.5f;
+	LifeSystem = CreateDefaultSubobject<ULifeSystem>(TEXT("LifeSystem"));
+	AddOwnedComponent(LifeSystem);
 
 	_jumpStrafePowerPercentage = 0.6f;
 	_jumpRedirectionPenalty = 0.75f;
@@ -140,9 +142,6 @@ void ARSTestCharacter::BeginPlay()
 
 	_wallRunTriggerLeft->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
 	_wallRunTriggerRight->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
-
-	_health = _maxHealth;
-	_canTakeDamage = true;
 
 	// Wall run variables
 	_previousWallRunActor = nullptr;
@@ -374,6 +373,12 @@ void ARSTestCharacter::Tick(float DeltaTime)
 	}
 }
 
+void ARSTestCharacter::OnAttacked(AActor* attackedBy, float attemptedDamage)
+{
+	// CAUTION: Projeciles are likely to be destroyed after hitting player (attackedBy)
+	LifeSystem->OnTakeDamage(attemptedDamage);
+}
+
 void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OverlappedComp && (OverlappedComp == _wallRunTriggerLeft || OverlappedComp == _wallRunTriggerRight))
@@ -392,6 +397,16 @@ bool ARSTestCharacter::CheckWillWallRun(EWallRunEntrySide sideOfActivation, FVec
 		!CheckVelocityIsAcceptableForWallRunning())
 	{
 		return false;
+	}
+
+	if (wallRunOnActor->IsA(ABaseMagicPower::StaticClass()))
+	{
+		ABaseMagicPower* power = Cast<ABaseMagicPower>(wallRunOnActor);
+		if (!power->GetPowerIsActive())
+		{
+			// Stops earth spikes from spawning next to you on the wall and counting as a new wall run which provides a new jump
+			return false;
+		}
 	}
 
 	bool result = false;
@@ -521,21 +536,6 @@ void ARSTestCharacter::Landed(const FHitResult& Hit)
 	}
 
 	_currentWallRunIsOver = false;
-}
-
-void ARSTestCharacter::OnTakeDamage(float damageAmount)
-{
-	if (_canTakeDamage)
-	{
-		_health -= damageAmount;
-		_canTakeDamage = false;
-		GetWorldTimerManager().SetTimer(_invulnerableWindowHandle, this, &ARSTestCharacter::EndInvulnerability, _invulnerabilityWindowSeconds);
-	}
-}
-
-void ARSTestCharacter::EndInvulnerability()
-{
-	_canTakeDamage = true;
 }
 
 void ARSTestCharacter::WallRunBegin()

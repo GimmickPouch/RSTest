@@ -29,9 +29,9 @@ ARSTestProjectile::ARSTestProjectile()
 	ProjectileMovement->bShouldBounce = true;
 
 	// Die after 3 seconds by default
-	InitialLifeSpan = 3.0f;
+	InitialLifeSpan = 3.f;
 
-	_damage = 5.0f;
+	_damage = 1.f;
 }
 
 void ARSTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -42,12 +42,8 @@ void ARSTestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 		{
 			ABaseEnemy* enemy = Cast<ABaseEnemy>(OtherActor);
 
-			enemy->OnShot(this, _damage);
+			enemy->OnAttacked(this, _damage);
 			Destroy();
 		}
-		//else if ((OtherComp != NULL) && OtherComp->IsSimulatingPhysics()) // Only add impulse and destroy projectile if we hit a physics
-		//{
-		//	OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation()); // Commented out template line
-		//}
 	}
 }

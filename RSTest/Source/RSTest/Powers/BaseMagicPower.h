@@ -27,6 +27,13 @@ protected:
 	bool _powerHasBeenActivated;
 	bool _powerIsActive;
 
+	//GettersAndSetter
+public:
+	UFUNCTION(BlueprintCallable, Category = "Magic Power GetSet")
+		bool GetPowerIsActive() const { return _powerIsActive; }
+	UFUNCTION(BlueprintCallable, Category = "Magic Power GetSet")
+		void SetPowerIsActive(bool value) { _powerIsActive = value; }
+
 	//Functions
 protected:
 	virtual void BeginPlay() override;
