@@ -251,6 +251,9 @@ protected:
 	//Visuals and Triggers
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		class UBoxComponent* _wallRunTrigger;
+		class UBoxComponent* _wallRunTriggerLeft;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		class UBoxComponent* _wallRunTriggerRight;
 };
 

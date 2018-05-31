@@ -88,10 +88,16 @@ ARSTestCharacter::ARSTestCharacter()
 	//bUsingMotionControllers = true;
 
 	// Luke added from here:
-	_wallRunTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("WallRunOverlapTrigger"));
-	_wallRunTrigger->SetupAttachment(RootComponent);
-	_wallRunTrigger->SetCollisionProfileName("OverlapAll");
-	_wallRunTrigger->bGenerateOverlapEvents = true;
+
+	_wallRunTriggerLeft = CreateDefaultSubobject<UBoxComponent>(TEXT("WallRunOverlapTriggerLeft"));
+	_wallRunTriggerLeft->SetupAttachment(RootComponent);
+	_wallRunTriggerLeft->SetCollisionProfileName("OverlapAll");
+	_wallRunTriggerLeft->bGenerateOverlapEvents = true;
+
+	_wallRunTriggerRight = CreateDefaultSubobject<UBoxComponent>(TEXT("WallRunOverlapTriggerRight"));
+	_wallRunTriggerRight->SetupAttachment(RootComponent);
+	_wallRunTriggerRight->SetCollisionProfileName("OverlapAll");
+	_wallRunTriggerRight->bGenerateOverlapEvents = true;
 
 	_maxHealth = 5.f;
 	_invulnerabilityWindowSeconds = 0.5f;
@@ -132,7 +138,8 @@ void ARSTestCharacter::BeginPlay()
 
 	// Luke added from here:
 
-	_wallRunTrigger->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
+	_wallRunTriggerLeft->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
+	_wallRunTriggerRight->OnComponentBeginOverlap.AddDynamic(this, &ARSTestCharacter::OnOverlapBegin);
 
 	_health = _maxHealth;
 	_canTakeDamage = true;
@@ -370,7 +377,7 @@ void ARSTestCharacter::Tick(float DeltaTime)
 void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!OverlappedComp ||
-		OverlappedComp != _wallRunTrigger ||
+		(OverlappedComp != _wallRunTriggerLeft && OverlappedComp != _wallRunTriggerRight) ||
 		_isWallRunning ||
 		!GetCharacterMovement()->IsFalling() ||
 		!OtherActor ||
@@ -380,11 +387,12 @@ void ARSTestCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
 		return;
 	}
 
-	// This check would need to be refined for assets that aren't straight walls
-	// Perhaps have a left wall run trigger and a right wall run trigger on the character to easily distinguish side overlap came from?
-	FVector normDirectionToWall = OtherActor->GetActorLocation() - FirstPersonCameraComponent->GetComponentLocation().GetSafeNormal();
-	bool activateFromRight = FVector::DotProduct(normDirectionToWall, FirstPersonCameraComponent->GetRightVector()) > 0 ? true : false;
-	FVector directionOfWallRun = activateFromRight ? FirstPersonCameraComponent->GetRightVector() : FirstPersonCameraComponent->GetRightVector() * -1;
+	bool activateFromRight = OverlappedComp == _wallRunTriggerRight;
+	FVector directionOfWallRun = FirstPersonCameraComponent->GetRightVector();
+	if (!activateFromRight)
+	{
+		directionOfWallRun *= -1;
+	}
 
 	FHitResult hitData(ForceInit);
 	FCollisionQueryParams traceParams(FName(TEXT("WallRunTracer")), false, this);
